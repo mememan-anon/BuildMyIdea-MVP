@@ -19,7 +19,8 @@ import { initDatabase } from './server/models/database.js';
 const db = initDatabase();
 
 // Import routes
-import { ideaRoutes, stripeRoutes, adminRoutes, userRoutes } from './server/routes/index.js';
+import { ideaRoutes, stripeRoutes, adminRoutes, userRoutes, authRoutes } from './server/routes/index.js';
+import { startTokenCleanup } from './server/models/tokenBlacklist.js';
 
 // Import security middleware
 import { applyRateLimiting, strictRateLimiter } from './server/middleware/rateLimiter.js';
@@ -50,10 +51,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Session middleware - needed for CSRF token storage
 app.use(cookieParser());
 
-// CSRF Protection middleware (generates token for GET, validates for POST/PUT/DELETE)
-app.use(csrfProtection);
+// CSRF Protection - apply selectively where needed
+// Note: Auth routes, webhook skip CSRF (exempt paths below)
+app.use((req, res, next) => {
+  const csrfExemptPaths = ['/api/auth', '/api/stripe/webhook'];
+  const isCsrfExempt = csrfExemptPaths.some(path => req.path.startsWith(path));
+  
+  if (isCsrfExempt) {
+    return next();
+  }
+  
+  return csrfProtection(req, res, next);
+});
 
-// Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'buildmyidea-secret-key',
   resave: false,
@@ -65,6 +75,7 @@ app.use(session({
 }));
 
 // API Routes with rate limiting and CSRF protection
+app.use('/api/auth', applyRateLimiting, authRoutes);
 app.use('/api/ideas', applyRateLimiting, ideaRoutes);
 app.use('/api/stripe/webhook', skipCSRF, stripeRoutes); // Webhook skips CSRF
 app.use('/api/stripe', applyRateLimiting, stripeRoutes);
