@@ -9,6 +9,7 @@
     "dev": "node --watch server.js",
     "test": "node test.js",
     "migrate": "node scripts/migrate.js",
+    "migrate:passwords": "node server/scripts/migratePasswords.js",
     "seed": "node scripts/seed.js",
     "build": "node scripts/build.js",
     "deploy": "node scripts/deploy.js"

@@ -11,9 +11,78 @@ import {
   generateRefreshToken,
   verifyRefreshToken
 } from '../middleware/auth.js';
+import { initDatabase } from '../models/database.js';
+
+const db = initDatabase();
 
 // Bcrypt work factor
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 12;
+
+// Account lockout configuration
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+/**
+ * Check if account is locked
+ */
+function isAccountLocked(user) {
+  if (!user.locked_until) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return user.locked_until > now;
+}
+
+/**
+ * Get remaining lockout time in minutes
+ */
+function getLockoutRemaining(user) {
+  if (!user.locked_until) return 0;
+  const now = Math.floor(Date.now() / 1000);
+  const remaining = user.locked_until - now;
+  return Math.max(0, Math.ceil(remaining / 60));
+}
+
+/**
+ * Record failed login attempt
+ */
+function recordFailedLogin(userId) {
+  const stmt = db.prepare(`
+    UPDATE users
+    SET failed_login_attempts = failed_login_attempts + 1
+    WHERE id = ?
+  `);
+  stmt.run(userId);
+  
+  // Check if account should be locked
+  const user = UserModel.findById(userId);
+  if (user && user.failed_login_attempts >= MAX_FAILED_ATTEMPTS) {
+    lockAccount(userId);
+  }
+}
+
+/**
+ * Lock account
+ */
+function lockAccount(userId) {
+  const lockedUntil = Math.floor(Date.now() / 1000) + (LOCKOUT_DURATION / 1000);
+  const stmt = db.prepare(`
+    UPDATE users
+    SET locked_until = ?
+    WHERE id = ?
+  `);
+  stmt.run(lockedUntil, userId);
+}
+
+/**
+ * Reset failed login attempts on successful login
+ */
+function resetFailedLogins(userId) {
+  const stmt = db.prepare(`
+    UPDATE users
+    SET failed_login_attempts = 0, locked_until = NULL
+    WHERE id = ?
+  `);
+  stmt.run(userId);
+}
 
 /**
  * Password validation
@@ -146,20 +215,46 @@ export async function login(req, res) {
     // Find user
     const user = UserModel.findByEmail(email);
     if (!user) {
+      // Don't reveal that user doesn't exist for security
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid email or password'
       });
     }
     
+    // Check if account is locked
+    if (isAccountLocked(user)) {
+      const remainingMinutes = getLockoutRemaining(user);
+      return res.status(423).json({
+        error: 'Locked',
+        message: `Account locked. Please try again in ${remainingMinutes} minute(s).`
+      });
+    }
+    
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
+      // Record failed attempt
+      recordFailedLogin(user.id);
+      
+      // Check if account was just locked
+      const updatedUser = UserModel.findById(user.id);
+      if (isAccountLocked(updatedUser)) {
+        const remainingMinutes = getLockoutRemaining(updatedUser);
+        return res.status(423).json({
+          error: 'Locked',
+          message: `Too many failed attempts. Account locked for ${remainingMinutes} minute(s).`
+        });
+      }
+      
       return res.status(401).json({
         error: 'Unauthorized',
         message: 'Invalid email or password'
       });
     }
+    
+    // Password is correct - reset failed attempts
+    resetFailedLogins(user.id);
     
     // Generate tokens
     const accessToken = generateAccessToken(user.id, !!user.is_admin);
