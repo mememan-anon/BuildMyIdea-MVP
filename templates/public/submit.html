@@ -6,108 +6,139 @@
   <title>Submit Your Idea - BuildMyIdea</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">🚀 BuildMyIdea</a>
-      <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/demos">Demos</a>
+<body class="dark-theme">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-indicators">
+      <span class="status-dot active"></span> System Active
+      <span class="status-divider">|</span>
+      <span class="status-dot active"></span> Queue Open
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="submit-page">
+      <div class="submit-form-container">
+        <h1>New Submission</h1>
+        <p class="submit-subtitle">More detail = better product</p>
+
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <form id="idea-form" class="idea-form">
+          <div class="form-group">
+            <label for="email">Your Email *</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com">
+          </div>
+
+          <div class="form-group">
+            <label for="title">Idea Title *</label>
+            <input type="text" id="title" name="title" required placeholder="E.g., AI-Powered Recipe Finder" maxlength="100">
+            <small class="form-hint">Brief, catchy title for your idea</small>
+          </div>
+
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+              <option value="general">General</option>
+              <option value="web">Web App</option>
+              <option value="mobile">Mobile App</option>
+              <option value="ai">AI/ML</option>
+              <option value="productivity">Productivity</option>
+              <option value="ecommerce">E-commerce</option>
+              <option value="social">Social</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description *</label>
+            <textarea id="description" name="description" required placeholder="Describe your idea in detail. What problem does it solve? Who is it for? What features would it have?" rows="8" maxlength="2000"></textarea>
+            <small class="form-hint">Be as detailed as possible. The more we understand, the better!</small>
+          </div>
+
+          <div class="form-group">
+            <label for="bid-amount">Bid Amount</label>
+            <select id="bid-amount" name="bid-amount">
+              <option value="1">$1 - Standard (Nightly Selection)</option>
+              <option value="5">$5 - Standard (Nightly Selection)</option>
+              <option value="10">$10 - Standard (Nightly Selection)</option>
+              <option value="25">$25 - Standard (Nightly Selection)</option>
+              <option value="50">$50 - Standard (Nightly Selection)</option>
+              <option value="100">$100 - Standard (Nightly Selection)</option>
+              <option value="500">$500 - Priority Build (Skip Queue)</option>
+              <option value="1000">$1000 - Priority Build (Skip Queue)</option>
+            </select>
+            <small class="form-hint">$500+ skips the nightly selection queue entirely</small>
+          </div>
+
+          <div class="form-group">
+            <label for="stealth" class="checkbox-label">
+              <input type="checkbox" id="stealth" name="stealth">
+              <span><strong>Stealth Mode</strong> - Keep your idea private. Only admins will see your submission details. Winners from stealth mode are not publicly displayed.</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="terms" class="checkbox-label">
+              <input type="checkbox" id="terms" name="terms" required>
+              <span>I understand my idea will be reviewed by the BuildMyIdea team. If not selected, bids above $1 will be refunded.</span>
+            </label>
+          </div>
+
+          <button type="submit" id="submit-btn" class="btn btn-large btn-primary">
+            Submit Idea
+          </button>
+
+          <p class="submit-note">
+            <small>💳 Payment powered by Stripe. Secure and encrypted.</small>
+          </p>
+        </form>
       </div>
-    </div>
-  </nav>
 
-  <div class="container submit-page">
-    <div class="submit-form-container">
-      <h1>Submit Your Idea</h1>
-      <p class="submit-subtitle">Tell us about your brilliant idea. Just $1 to submit.</p>
+      <div class="submit-info">
+        <h3>What Happens Next?</h3>
+        <ol class="steps-list">
+          <li>Complete the form and submit your bid</li>
+          <li>Your idea is added to the review queue</li>
+          <li>Every night at 10PM CST, one idea is selected (unless you bid $500+)</li>
+          <li>Selected ideas are fast-tracked for development</li>
+          <li>You'll be notified if your idea is chosen!</li>
+          <li>Build completed in 7 days</li>
+        </ol>
 
-      <div id="error-message" class="error-message" style="display: none;"></div>
-
-      <form id="idea-form" class="idea-form">
-        <div class="form-group">
-          <label for="email">Your Email *</label>
-          <input type="email" id="email" name="email" required placeholder="you@example.com">
+        <div class="info-box">
+          <h4>💡 Tips for Better Chances</h4>
+          <ul>
+            <li>Be clear about the problem you're solving</li>
+            <li>Describe your target audience</li>
+            <li>List key features you want</li>
+            <li>Explain what makes your idea unique</li>
+            <li>Bid $500+ to skip the queue entirely</li>
+          </ul>
         </div>
 
-        <div class="form-group">
-          <label for="title">Idea Title *</label>
-          <input type="text" id="title" name="title" required placeholder="E.g., AI-Powered Recipe Finder" maxlength="100">
-          <small class="form-hint">Brief, catchy title for your idea</small>
+        <div class="info-box" style="margin-top: 1.5rem;">
+          <h4>💰 Bid Options</h4>
+          <ul>
+            <li><strong>$1-$499:</strong> Enters nightly selection queue</li>
+            <li><strong>$500+:</strong> Priority Build - skips queue</li>
+            <li><strong>Refund Policy:</strong> Everything above $1 refunded if not selected</li>
+          </ul>
         </div>
-
-        <div class="form-group">
-          <label for="category">Category</label>
-          <select id="category" name="category">
-            <option value="general">General</option>
-            <option value="web">Web App</option>
-            <option value="mobile">Mobile App</option>
-            <option value="ai">AI/ML</option>
-            <option value="productivity">Productivity</option>
-            <option value="ecommerce">E-commerce</option>
-            <option value="social">Social</option>
-            <option value="entertainment">Entertainment</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="description">Description *</label>
-          <textarea id="description" name="description" required placeholder="Describe your idea in detail. What problem does it solve? Who is it for? What features would it have?" rows="8" maxlength="2000"></textarea>
-          <small class="form-hint">Be as detailed as possible. The more we understand, the better!</small>
-        </div>
-
-        <div class="form-group">
-          <label for="terms" class="checkbox-label">
-            <input type="checkbox" id="terms" name="terms" required>
-            <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and understand my idea will be reviewed by the BuildMyIdea team.</span>
-          </label>
-        </div>
-
-        <button type="submit" id="submit-btn" class="btn btn-large btn-primary">
-          Submit Idea - $1
-        </button>
-
-        <p class="submit-note">
-          <small>💳 Payment powered by Stripe. Secure and encrypted.</small>
-        </p>
-      </form>
-    </div>
-
-    <div class="submit-info">
-      <h3>What Happens Next?</h3>
-      <ol class="steps-list">
-        <li>Complete the form and pay $1</li>
-        <li>Your idea is added to our review queue</li>
-        <li>Our team evaluates all submissions</li>
-        <li>Selected ideas get fast-tracked for development</li>
-        <li>You'll be notified if your idea is chosen!</li>
-      </ol>
-
-      <div class="info-box">
-        <h4>💡 Tips for Better Chances</h4>
-        <ul>
-          <li>Be clear about the problem you're solving</li>
-          <li>Describe your target audience</li>
-          <li>List key features you want</li>
-          <li>Explain what makes your idea unique</li>
-        </ul>
       </div>
     </div>
   </div>
 
   <footer class="footer">
-    <div class="container">
-      <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/submit">Submit Idea</a>
-        <a href="/demos">Demos</a>
-        <a href="/dashboard">Dashboard</a>
-      </div>
-      <div class="footer-copyright">
-        <p>&copy; 2026 BuildMyIdea. All rights reserved.</p>
-      </div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/submit">Submit</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/demos">Demos</a>
+    </div>
+    <div class="footer-powered">
+      Powered by <a href="https://x.com/KellyClaudeAI" target="_blank" rel="noopener">Kelly Claude - Executive AI</a>
     </div>
   </footer>
 

@@ -12,7 +12,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
  */
 export async function createCheckoutSession(req, res) {
   try {
-    const { title, description, category, email, userId } = req.body;
+    const { title, description, category, email, userId, bid_amount = 1, is_priority = false, is_stealth = false } = req.body;
 
     // Validate input
     if (!title || !description || !email) {
@@ -40,19 +40,25 @@ export async function createCheckoutSession(req, res) {
       return res.status(500).json({ error: 'Failed to create customer' });
     }
 
-    // Create checkout session
-    const priceId = process.env.STRIPE_PRICE_ID;
-    if (!priceId) {
+    // Get or create Stripe price based on bid amount
+    let priceId = process.env.STRIPE_PRICE_ID; // Default $1 price
+
+    // For MVP, use the configured price ID for all bids
+    // In production, you'd create different price objects for different amounts
+    const basePriceId = process.env.STRIPE_PRICE_ID;
+    if (!basePriceId) {
       return res.status(500).json({ error: 'Stripe Price ID not configured' });
     }
 
+    // Create checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customer.id,
       payment_method_types: ['card'],
       line_items: [
         {
-          price: priceId,
-          quantity: 1,
+          price: basePriceId,
+          quantity: bid_amount || 1, // Use bid_amount as quantity for MVP
+          description: `Idea Submission${is_priority ? ' (Priority Build)' : ''}`,
         },
       ],
       mode: 'payment',
@@ -63,12 +69,14 @@ export async function createCheckoutSession(req, res) {
         description,
         category: category || 'general',
         email,
-        userId: userId || 'guest'
+        userId: userId || 'guest',
+        bid_amount: bid_amount?.toString() || '1',
+        is_priority: is_priority.toString(),
+        is_stealth: is_stealth.toString()
       },
       customer_email: email,
     });
 
-    // Store temporary idea data in session (will be finalized on payment success)
     res.json({
       sessionId: session.id,
       url: session.url,
@@ -140,6 +148,10 @@ async function handleCheckoutCompleted(session) {
   const metadata = session.metadata;
   const userId = metadata.userId === 'guest' ? createGuestUser(metadata.email) : metadata.userId;
 
+  const isPriority = metadata.is_priority === 'true';
+  const isStealth = metadata.is_stealth === 'true';
+  const bidAmount = parseInt(metadata.bid_amount) || 1;
+
   // Create the idea
   const idea = IdeaModel.create(
     userId,
@@ -150,12 +162,21 @@ async function handleCheckoutCompleted(session) {
     session.customer
   );
 
-  // Update idea status to 'paid'
-  IdeaModel.updateStatus(idea.id, 'paid');
+  // Set initial status
+  let status = 'paid';
+  if (isPriority) {
+    status = 'priority';
+  } else if (isStealth) {
+    status = 'stealth';
+  }
+
+  IdeaModel.updateStatus(idea.id, status);
 
   console.log(`✅ Idea created: ${idea.id} for user ${userId}`);
   console.log(`   Title: ${metadata.title}`);
+  console.log(`   Bid: $${bidAmount}${isPriority ? ' (Priority)' : ''}${isStealth ? ' (Stealth)' : ''}`);
   console.log(`   Payment: ${session.payment_intent}`);
+  console.log(`   Amount: ${session.amount_total / 100} ${session.currency.toUpperCase()}`);
 
   return idea;
 }
@@ -168,10 +189,10 @@ function createGuestUser(email) {
   // In production, send email to set password
   const crypto = require('crypto');
   const passwordHash = crypto.createHash('sha256').update(email + Date.now()).digest('hex');
-  
+
   const { UserModel } = require('../models/database.js');
   const user = UserModel.create(email, passwordHash);
-  
+
   return user.id;
 }
 
@@ -183,7 +204,7 @@ export async function getSessionDetails(req, res) {
     const { session_id } = req.params;
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
-    
+
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }

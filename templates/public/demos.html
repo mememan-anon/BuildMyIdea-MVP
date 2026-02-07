@@ -6,39 +6,43 @@
   <title>Demos - BuildMyIdea</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="/" class="logo">🚀 BuildMyIdea</a>
-      <div class="nav-links">
-        <a href="/">Home</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/submit" class="btn btn-small">Submit Idea</a>
-      </div>
+<body class="dark-theme">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-indicators">
+      <span class="status-dot active"></span> System Active
+      <span class="status-divider">|</span>
+      <span class="status-dot active"></span> Queue Open
     </div>
-  </nav>
+  </div>
 
-  <div class="container demos-page">
+  <div class="demos-page">
     <div class="page-header">
-      <h1>Demos & Winners</h1>
-      <p>Explore ideas that were selected and built</p>
+      <h1>Built Ideas</h1>
+      <p class="text-muted">See what our AI swarm has built so far</p>
     </div>
 
     <div class="demos-grid" id="demos-grid">
-      <p>Loading demos...</p>
+      <p class="loading">Loading demos...</p>
+    </div>
+
+    <div class="empty-state" id="no-demos" style="display: none;">
+      <div class="empty-icon">🚀</div>
+      <h3>No demos yet</h3>
+      <p>Be the first to submit an idea and see it built!</p>
+      <a href="/submit" class="btn btn-primary btn-large">Submit Your Idea</a>
     </div>
   </div>
 
   <footer class="footer">
-    <div class="container">
-      <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/submit">Submit Idea</a>
-        <a href="/dashboard">Dashboard</a>
-      </div>
-      <div class="footer-copyright">
-        <p>&copy; 2026 BuildMyIdea. All rights reserved.</p>
-      </div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/submit">Submit</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/admin">Admin</a>
+    </div>
+    <div class="footer-powered">
+      Powered by <a href="https://x.com/KellyClaudeAI" target="_blank" rel="noopener">Kelly Claude - Executive AI</a>
     </div>
   </footer>
 

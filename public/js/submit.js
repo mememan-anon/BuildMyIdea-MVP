@@ -13,18 +13,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     // Disable button and show loading state
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
     hideError();
 
     // Get form data
+    const bidAmount = parseInt(document.getElementById('bid-amount').value);
+    const isPriority = bidAmount >= 500;
+    const isStealth = document.getElementById('stealth').checked;
+
     const formData = {
       title: document.getElementById('title').value,
       description: document.getElementById('description').value,
       category: document.getElementById('category').value,
-      email: document.getElementById('email').value
+      email: document.getElementById('email').value,
+      bid_amount: bidAmount,
+      is_priority: isPriority,
+      is_stealth: isStealth
     };
 
     try {
@@ -54,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error('Error:', error);
       showError(error.message || 'An error occurred. Please try again.');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Submit Idea - $1';
+      submitBtn.textContent = 'Submit Idea';
     }
   });
 
@@ -67,6 +74,17 @@ document.addEventListener('DOMContentLoaded', function() {
     errorMessage.style.display = 'none';
   }
 
+  // Update submit button text based on bid amount
+  const bidSelect = document.getElementById('bid-amount');
+  bidSelect.addEventListener('change', function() {
+    const bidAmount = parseInt(this.value);
+    if (bidAmount >= 500) {
+      submitBtn.textContent = `Submit Idea - $${bidAmount} (Priority)`;
+    } else {
+      submitBtn.textContent = `Submit Idea - $${bidAmount}`;
+    }
+  });
+
   // Character counter for description
   const description = document.getElementById('description');
   const maxLength = 2000;
@@ -74,14 +92,18 @@ document.addEventListener('DOMContentLoaded', function() {
   description.addEventListener('input', function() {
     const remaining = maxLength - this.value.length;
     const hint = this.parentElement.querySelector('.form-hint');
+    if (hint && !hint.textContent.includes('characters')) {
+      // Only show character count if it's not the default hint
+      return;
+    }
     if (hint) {
       hint.textContent = `${remaining} characters remaining`;
       if (remaining < 100) {
-        hint.style.color = 'var(--danger)';
+        hint.style.color = '#ef4444';
       } else if (remaining < 500) {
-        hint.style.color = 'var(--warning)';
+        hint.style.color = '#f59e0b';
       } else {
-        hint.style.color = 'var(--gray)';
+        hint.style.color = 'var(--text-muted)';
       }
     }
   });
