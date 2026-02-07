@@ -20,6 +20,10 @@ const db = initDatabase();
 // Import routes
 import { ideaRoutes, stripeRoutes, adminRoutes, userRoutes } from './server/routes/index.js';
 
+// Import security middleware
+import { applyRateLimiting, strictRateLimiter } from './server/middleware/rateLimiter.js';
+import helmet from 'helmet';
+
 // Get file path for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +31,9 @@ const __dirname = path.dirname(__filename);
 // Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Security middleware
+app.use(helmet());
 
 // Middleware
 app.use(cors());
@@ -49,11 +56,11 @@ app.use(session({
   }
 }));
 
-// API Routes
-app.use('/api/ideas', ideaRoutes);
-app.use('/api/stripe', stripeRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/users', userRoutes);
+// API Routes with rate limiting
+app.use('/api/ideas', applyRateLimiting, ideaRoutes);
+app.use('/api/stripe', applyRateLimiting, stripeRoutes);
+app.use('/api/admin', applyRateLimiting, adminRoutes);
+app.use('/api/users', applyRateLimiting, userRoutes);
 
 // Page Routes
 app.get('/', (req, res) => {
