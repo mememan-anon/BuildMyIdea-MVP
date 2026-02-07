@@ -1,364 +1,478 @@
-# BuildMyIdea Deployment Guide
+# BuildMyIdea - Deployment Guide
 
-## Prerequisites
+Complete guide for deploying BuildMyIdea to production.
 
-- Node.js 18+ installed
-- Git installed
-- Stripe account (test mode)
-- Hosting account (Vercel/Railway/Render/VPS)
+## Table of Contents
 
----
+1. [Pre-Deployment Checklist](#pre-deployment-checklist)
+2. [Environment Variables](#environment-variables)
+3. [Deployment Platforms](#deployment-platforms)
+   - [Vercel](#vercel)
+   - [Railway](#railway)
+   - [Render](#render)
+   - [VPS/DigitalOcean](#vpsdigitalocean)
+4. [Stripe Production Setup](#stripe-production-setup)
+5. [Domain Configuration](#domain-configuration)
+6. [Monitoring & Maintenance](#monitoring--maintenance)
+
+## Pre-Deployment Checklist
+
+Before deploying, ensure:
+
+- [ ] All tests passing: `npm test`
+- [ ] Environment variables configured
+- [ ] Stripe production API keys ready
+- [ ] Stripe webhook endpoint configured
+- [ ] Admin password changed from default
+- [ ] Database backup strategy in place
+- [ ] SSL certificate ready
+- [ ] Monitoring/alerting configured
 
 ## Environment Variables
 
-Required environment variables:
+Required for production:
 
-```env
+```bash
 # Server
 NODE_ENV=production
 PORT=3000
 
-# Stripe
-STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_PUBLISHABLE_KEY=pk_test_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
-STRIPE_PRICE_ID=price_xxx
+# Stripe (Production)
+STRIPE_SECRET_KEY=sk_live_YOUR_LIVE_SECRET_KEY
+STRIPE_PUBLISHABLE_KEY=pk_live_YOUR_LIVE_PUBLISHABLE_KEY
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_LIVE_WEBHOOK_SECRET
+STRIPE_PRICE_ID=price_YOUR_LIVE_PRICE_ID
 
-# Session
-SESSION_SECRET=your-random-secret-key
+# Security
+SESSION_SECRET=long-random-string-min-32-chars
 
 # Admin
-ADMIN_EMAIL=admin@example.com
+ADMIN_EMAIL=your-admin@example.com
 ADMIN_PASSWORD=secure-password-here
+
+# Database
+DB_PATH=./database/bmi.db
 
 # Site
 SITE_URL=https://your-domain.com
-SITE_NAME=BuildMyIdea
 ```
 
----
+## Deployment Platforms
 
-## Deployment Options
+### Vercel
 
-### Option 1: Vercel (Recommended)
+Vercel is the easiest option for serverless deployment.
 
-1. **Prepare for deployment:**
-   ```bash
-   npm run build
-   npm run deploy vercel
-   ```
+#### Steps:
 
-2. **Install Vercel CLI:**
+1. **Install Vercel CLI**
    ```bash
    npm i -g vercel
    ```
 
-3. **Deploy:**
+2. **Login to Vercel**
    ```bash
    vercel login
-   vercel
    ```
 
-4. **Add environment variables in Vercel Dashboard:**
-   - Go to project settings → Environment Variables
-   - Add all required variables from above
+3. **Generate Vercel config**
+   ```bash
+   npm run deploy vercel
+   ```
 
-5. **Deploy to production:**
+4. **Deploy**
    ```bash
    vercel --prod
    ```
 
-6. **Set up Stripe webhook:**
-   - Add webhook URL: `https://your-site.vercel.app/webhooks/stripe`
-   - Select events: `checkout.session.completed`, `payment_intent.succeeded`
-   - Copy webhook secret to environment variables
+5. **Add Environment Variables**
+   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   - Add all required variables from above
 
----
+6. **Configure Stripe Webhook**
+   - Webhook URL: `https://your-domain.vercel.app/api/stripe/webhook`
+   - Events: `checkout.session.completed`, `payment_intent.succeeded`
+   - Copy webhook secret to `STRIPE_WEBHOOK_SECRET`
 
-### Option 2: Railway
+#### Pros:
+- Zero configuration
+- Automatic SSL
+- Global CDN
+- Preview deployments
 
-1. **Prepare for deployment:**
-   ```bash
-   npm run build
-   npm run deploy railway
-   ```
+#### Cons:
+- Serverless (may need adjustments for long-running tasks)
+- Database file not persistent (use external DB)
 
-2. **Install Railway CLI:**
+### Railway
+
+Railway provides a full VPS experience with managed databases.
+
+#### Steps:
+
+1. **Install Railway CLI**
    ```bash
    npm i -g @railway/cli
    ```
 
-3. **Deploy:**
+2. **Login**
    ```bash
    railway login
+   ```
+
+3. **Initialize project**
+   ```bash
    railway init
+   ```
+
+4. **Generate config**
+   ```bash
+   npm run deploy railway
+   ```
+
+5. **Deploy**
+   ```bash
    railway up
    ```
 
-4. **Add environment variables in Railway Dashboard:**
-   - Click project → Variables
+6. **Add environment variables**
+   - Railway Dashboard → Your Project → Variables
    - Add all required variables
 
-5. **Set up Stripe webhook:**
-   - Add webhook URL: `https://your-app.railway.app/webhooks/stripe`
-   - Configure webhook events
+#### Pros:
+- Full VPS control
+- Persistent storage
+- Easy database integration
+- Automatic SSL
 
----
+### Render
 
-### Option 3: Render
+Render offers free tiers and easy deployment.
 
-1. **Prepare for deployment:**
-   ```bash
-   npm run build
-   npm run deploy render
-   ```
+#### Steps:
 
-2. **Push code to GitHub**
-
-3. **Create Web Service on Render:**
-   - Go to render.com → New → Web Service
+1. **Push code to GitHub**
+2. **Create Web Service on Render**
+   - Go to render.com
+   - Click "New +"
    - Connect your GitHub repository
-   - Add environment variables
-   - Deploy
+3. **Configure build**
+   - Build Command: `npm install`
+   - Start Command: `node server.js`
+4. **Add environment variables** in Render dashboard
+5. **Deploy**
 
-4. **Set up Stripe webhook:**
-   - Add webhook URL: `https://your-app.onrender.com/webhooks/stripe`
+#### Pros:
+- Free tier available
+- Automatic deploys from git
+- SSL included
 
----
+### VPS / DigitalOcean
 
-### Option 4: VPS / Dedicated Server
+For full control over your infrastructure.
 
-1. **Connect to server:**
+#### Steps:
+
+1. **Provision a VPS**
+   - DigitalOcean Droplet ($6/month recommended)
+   - Ubuntu 22.04 LTS
+
+2. **Connect to VPS**
    ```bash
-   ssh user@your-server.com
+   ssh root@your-vps-ip
    ```
 
-2. **Install Node.js:**
+3. **Install Node.js**
    ```bash
    curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-   sudo apt-get install -y nodejs
+   sudo apt install -y nodejs
    ```
 
-3. **Clone repository:**
+4. **Install PM2 (Process Manager)**
    ```bash
-   git clone https://github.com/mememan-anon/BuildMyIdea-MVP.git
-   cd BuildMyIdea-MVP
+   npm install -g pm2
    ```
 
-4. **Install dependencies:**
+5. **Install Nginx**
    ```bash
-   npm install
+   sudo apt update
+   sudo apt install nginx
    ```
 
-5. **Configure environment:**
+6. **Clone your repository**
+   ```bash
+   cd /var/www
+   git clone https://github.com/your-username/buildmyidea-mvp.git
+   cd buildmyidea-mvp
+   ```
+
+7. **Install dependencies**
+   ```bash
+   npm install --production
+   ```
+
+8. **Configure environment**
    ```bash
    cp .env.example .env
-   nano .env  # Add your variables
+   nano .env
+   # Add your production environment variables
    ```
 
-6. **Initialize database:**
+9. **Initialize database**
    ```bash
    npm run migrate
-   npm run seed  # Optional
    ```
 
-7. **Install PM2:**
-   ```bash
-   npm i -g pm2
-   ```
-
-8. **Start application:**
-   ```bash
-   pm2 start server.js --name buildmyidea
-   pm2 save
-   pm2 startup
-   ```
-
-9. **Configure Nginx:**
-   ```bash
-   sudo apt-get install nginx
-   sudo nano /etc/nginx/sites-available/buildmyidea
-   ```
-
-   Add:
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com;
-
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/buildmyidea /etc/nginx/sites-enabled/
-   sudo nginx -t
-   sudo systemctl restart nginx
-   ```
-
-10. **Set up SSL with Let's Encrypt:**
+10. **Start with PM2**
     ```bash
-    sudo apt-get install certbot python3-certbot-nginx
+    pm2 start server.js --name buildmyidea
+    pm2 save
+    pm2 startup
+    ```
+
+11. **Configure Nginx**
+    ```bash
+    sudo nano /etc/nginx/sites-available/buildmyidea
+    ```
+    
+    Add:
+    ```nginx
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        location / {
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }
+    ```
+
+12. **Enable site**
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/buildmyidea /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl restart nginx
+    ```
+
+13. **Setup SSL with Certbot**
+    ```bash
+    sudo apt install certbot python3-certbot-nginx
     sudo certbot --nginx -d your-domain.com
     ```
 
-11. **Set up Stripe webhook:**
-    - Add webhook URL: `https://your-domain.com/webhooks/stripe`
+#### Pros:
+- Full control
+- Cheapest option ($6/month)
+- Persistent storage
+- Can host multiple apps
 
----
+## Stripe Production Setup
 
-## Stripe Setup
+### 1. Switch to Live Mode
 
-### 1. Create a Product
+1. Go to Stripe Dashboard
+2. Click "Test mode" toggle to turn it off
+3. This activates live mode
 
-1. Go to Stripe Dashboard → Products
-2. Click "Add product"
-3. Configure:
-   - Name: "Idea Submission"
-   - Description: "Submit your idea for $1"
-4. Add price:
-   - Amount: $1.00
-   - Currency: USD
-   - Billing: One-time
-5. Copy the **Price ID** to your environment variables
+### 2. Create Live Product
 
-### 2. Set Up Webhook
+1. Go to Products in live mode
+2. Create "Idea Submission" product
+3. Price: $1.00 USD (one-time)
+4. Copy the live Price ID
 
-1. Go to Stripe Dashboard → Developers → Webhooks
-2. Click "Add endpoint"
-3. Enter endpoint URL: `https://your-domain.com/webhooks/stripe`
-4. Select events to send:
+### 3. Get Live API Keys
+
+1. Go to Developers → API keys
+2. Copy the live Secret Key (`sk_live_...`)
+3. Copy the live Publishable Key (`pk_live_...`)
+
+### 4. Configure Webhook
+
+1. Go to Developers → Webhooks
+2. Add endpoint: `https://your-domain.com/api/stripe/webhook`
+3. Select events:
    - `checkout.session.completed`
    - `payment_intent.succeeded`
-   - (Optional) `payment_intent.payment_failed`
-5. Click "Add endpoint"
-6. Copy the **Webhook Secret** to your environment variables
+   - `payment_intent.payment_failed`
+4. Copy webhook signing secret
 
----
+### 5. Update Environment Variables
 
-## Post-Deployment Checklist
+Add to your production environment:
+- `STRIPE_SECRET_KEY=sk_live_...`
+- `STRIPE_PUBLISHABLE_KEY=pk_live_...`
+- `STRIPE_WEBHOOK_SECRET=whsec_...`
+- `STRIPE_PRICE_ID=price_...`
 
-- [ ] Environment variables configured
-- [ ] Database initialized (`npm run migrate`)
-- [ ] Admin user created with secure password
-- [ ] Stripe webhook endpoint configured and tested
-- [ ] HTTPS/SSL enabled
-- [ ] Custom domain configured (if applicable)
-- [ ] DNS records updated
-- [ ] Test payment flow in test mode
-- [ ] Monitor logs for errors
-- [ ] Set up monitoring/alerting (optional)
+## Domain Configuration
 
----
+### Buy a Domain
 
-## Monitoring
+- Namecheap
+- GoDaddy
+- Cloudflare Registrar
 
-### View Application Logs
+### Point Domain to Your Server
 
-**Vercel:**
+#### For VPS:
+
+1. **A Record**
+   - Type: A
+   - Name: @
+   - Value: Your VPS IP address
+
+2. **CNAME Record** (for www)
+   - Type: CNAME
+   - Name: www
+   - Value: @
+
+#### For Vercel/Railway/Render:
+
+1. Follow platform's domain setup guide
+2. Update DNS settings at your domain registrar
+3. Platform will handle SSL automatically
+
+## Monitoring & Maintenance
+
+### Logging
+
+For VPS deployments:
+
 ```bash
-vercel logs
-```
-
-**Railway:**
-```bash
-railway logs
-```
-
-**Render:**
-View logs in Render Dashboard
-
-**PM2 (VPS):**
-```bash
+# View PM2 logs
 pm2 logs buildmyidea
-pm2 monit
+
+# View Nginx logs
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
 ```
 
----
+### Database Backups
 
-## Updating the Application
+Set up automated backups:
 
-1. Pull latest changes:
+```bash
+# Create backup script
+nano /var/www/buildmyidea-mvp/backup.sh
+```
+
+Add:
+```bash
+#!/bin/bash
+DATE=$(date +%Y%m%d_%H%M%S)
+cp /var/www/buildmyidea-mvp/database/bmi.db /var/www/backups/bmi_$DATE.db
+# Keep last 7 days
+find /var/www/backups -name "bmi_*.db" -mtime +7 -delete
+```
+
+```bash
+chmod +x /var/www/buildmyidea-mvp/backup.sh
+
+# Add to crontab (daily at 2 AM)
+crontab -e
+# Add: 0 2 * * * /var/www/buildmyidea-mvp/backup.sh
+```
+
+### Uptime Monitoring
+
+Use services like:
+- UptimeRobot (free)
+- Pingdom
+- Better Uptime
+
+### Security
+
+1. **Update system regularly**
    ```bash
-   git pull origin main
+   sudo apt update && sudo apt upgrade
    ```
 
-2. Install dependencies:
+2. **Configure firewall**
    ```bash
-   npm install
+   sudo ufw allow OpenSSH
+   sudo ufw allow 'Nginx Full'
+   sudo ufw enable
    ```
 
-3. Restart application:
+3. **Disable root login**
    ```bash
-   pm2 restart buildmyidea  # VPS
-   # Or your platform's restart method
+   # Create a new user first
+   adduser deployer
+   usermod -aG sudo deployer
+
+   # Edit SSH config
+   sudo nano /etc/ssh/sshd_config
+   # Set: PermitRootLogin no
+   sudo systemctl restart ssh
    ```
-
----
-
-## Troubleshooting
-
-### Stripe webhook not working
-
-1. Verify webhook secret matches
-2. Check webhook endpoint is accessible: `curl https://your-domain.com/health`
-3. Review Stripe webhook delivery logs
-
-### Database issues
-
-1. Check DB_PATH environment variable
-2. Ensure database directory is writable
-3. Re-run migration: `npm run migrate`
-
-### Payment not completing
-
-1. Verify Stripe keys are correct
-2. Check Price ID exists and is active
-3. Review Stripe Dashboard for payment events
-
-### 502 Bad Gateway
-
-1. Check if server is running
-2. Verify PORT is correct
-3. Review application logs
-
----
-
-## Security Best Practices
-
-1. **Never commit `.env` file** to version control
-2. **Use strong, unique passwords** for admin account
-3. **Enable HTTPS** in production
-4. **Set up firewall rules** (VPS)
-5. **Regular updates** - Keep dependencies updated
-6. **Monitor for suspicious activity** - Review Stripe logs
-7. **Rate limiting** - Implement API rate limiting in production
-8. **Input validation** - Validate all user inputs
-
----
 
 ## Scaling Considerations
 
-For higher traffic:
-- Use a managed database (PostgreSQL, MySQL) instead of SQLite
-- Implement Redis for session storage and caching
-- Use a CDN for static assets
-- Set up load balancing
-- Implement proper logging (Sentry, LogRocket)
-- Add API rate limiting
-- Implement background job processing for queue
+### Database
 
----
+For production with high traffic:
+- Switch to PostgreSQL or MySQL
+- Use managed database service (Railway, Render, AWS RDS)
+- Implement read replicas
+
+### Storage
+
+For large file uploads:
+- Use AWS S3, Cloudflare R2, or similar
+- Store file URLs in database
+
+### CDN
+
+For static assets:
+- Cloudflare CDN (free)
+- AWS CloudFront
+- Vercel Edge Network (if using Vercel)
+
+## Troubleshooting
+
+### Stripe Webhook Not Working
+
+1. Check webhook secret is correct
+2. Verify webhook URL is accessible
+3. Check server logs
+4. Use Stripe webhook testing tool
+
+### Database Locked
+
+```bash
+# Delete WAL and SHM files
+rm -f database/bmi.db-wal database/bmi.db-shm
+```
+
+### PM2 App Not Starting
+
+```bash
+# Check logs
+pm2 logs buildmyidea
+
+# Restart
+pm2 restart buildmyidea
+
+# If still failing, delete and recreate
+pm2 delete buildmyidea
+pm2 start server.js --name buildmyidea
+pm2 save
+```
 
 ## Support
 
-For issues or questions:
-- GitHub Issues: https://github.com/mememan-anon/BuildMyIdea-MVP/issues
-- Email: support@buildmyidea.com (in production)
+For deployment issues:
+- Check platform-specific documentation
+- Review server logs
+- Test webhook endpoints with Stripe CLI
+- Check Stripe Dashboard for payment events
+
+---
+
+Good luck with your deployment! 🚀
