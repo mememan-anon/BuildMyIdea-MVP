@@ -5,6 +5,7 @@
 
 import express from 'express';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -22,6 +23,7 @@ import { ideaRoutes, stripeRoutes, adminRoutes, userRoutes } from './server/rout
 
 // Import security middleware
 import { applyRateLimiting, strictRateLimiter } from './server/middleware/rateLimiter.js';
+import { csrfProtection, skipCSRF, strictCSRFValidation } from './server/middleware/csrfProtection.js';
 import helmet from 'helmet';
 
 // Get file path for ES modules
@@ -45,6 +47,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Session middleware - needed for CSRF token storage
+app.use(cookieParser());
+
+// CSRF Protection middleware (generates token for GET, validates for POST/PUT/DELETE)
+app.use(csrfProtection);
+
 // Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'buildmyidea-secret-key',
@@ -56,10 +64,11 @@ app.use(session({
   }
 }));
 
-// API Routes with rate limiting
+// API Routes with rate limiting and CSRF protection
 app.use('/api/ideas', applyRateLimiting, ideaRoutes);
+app.use('/api/stripe/webhook', skipCSRF, stripeRoutes); // Webhook skips CSRF
 app.use('/api/stripe', applyRateLimiting, stripeRoutes);
-app.use('/api/admin', applyRateLimiting, adminRoutes);
+app.use('/api/admin', applyRateLimiting, strictCSRFValidation, adminRoutes); // Admin uses strict CSRF
 app.use('/api/users', applyRateLimiting, userRoutes);
 
 // Page Routes
