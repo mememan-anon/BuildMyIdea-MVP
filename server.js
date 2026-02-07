@@ -25,6 +25,7 @@ import { startTokenCleanup } from './server/models/tokenBlacklist.js';
 // Import security middleware
 import { applyRateLimiting, strictRateLimiter } from './server/middleware/rateLimiter.js';
 import { csrfProtection, skipCSRF, strictCSRFValidation } from './server/middleware/csrfProtection.js';
+import { cspProtection } from './server/middleware/csp.js';
 import helmet from 'helmet';
 
 // Get file path for ES modules
@@ -35,8 +36,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
-app.use(helmet());
+// Security middleware with custom CSP
+app.use(helmet({
+  contentSecurityPolicy: false // We'll add custom CSP
+}));
+app.use(cspProtection());
 
 // Middleware
 app.use(cors());
