@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - BuildMyIdea</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <!-- Login Modal -->
+  <div id="login-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Admin Login</h2>
+        <button class="modal-close" onclick="closeLoginModal()">&times;</button>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="admin-email">Email</label>
+          <input type="email" id="admin-email" required>
+        </div>
+        <div class="form-group">
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" required>
+        </div>
+        <div id="login-error" class="error-message" style="display: none;"></div>
+        <button type="submit" class="btn btn-primary btn-full">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Admin Panel -->
+  <div id="admin-panel" class="admin-panel" style="display: none;">
+    <nav class="admin-nav">
+      <div class="admin-nav-header">
+        <a href="/" class="logo">🚀 BuildMyIdea</a>
+        <span class="admin-badge">ADMIN</span>
+      </div>
+      <div class="admin-nav-links">
+        <a href="#" class="nav-link active" data-tab="dashboard">Dashboard</a>
+        <a href="#" class="nav-link" data-tab="ideas">All Ideas</a>
+        <a href="#" class="nav-link" data-tab="queue">Build Queue</a>
+        <a href="#" class="nav-link" data-tab="winners">Winners</a>
+      </div>
+      <div class="admin-nav-footer">
+        <button id="logout-btn" class="btn btn-small btn-outline">Logout</button>
+      </div>
+    </nav>
+
+    <main class="admin-main">
+      <header class="admin-header">
+        <h1 id="page-title">Dashboard</h1>
+        <div class="admin-user">
+          <span id="admin-email-display"></span>
+        </div>
+      </header>
+
+      <!-- Dashboard Tab -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">👥</div>
+            <div class="stat-number" id="stat-users">0</div>
+            <div class="stat-label">Total Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">💡</div>
+            <div class="stat-number" id="stat-ideas">0</div>
+            <div class="stat-label">Total Ideas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-number" id="stat-winners">0</div>
+            <div class="stat-label">Winners</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📋</div>
+            <div class="stat-number" id="stat-queue">0</div>
+            <div class="stat-label">In Queue</div>
+          </div>
+        </div>
+
+        <div class="dashboard-section">
+          <h2>Pending Review</h2>
+          <div id="pending-ideas" class="ideas-table">
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ideas Tab -->
+      <div id="tab-ideas" class="tab-content">
+        <div class="table-header">
+          <h2>All Ideas</h2>
+          <div class="table-actions">
+            <select id="status-filter" class="form-select">
+              <option value="all">All Status</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="winner">Winner</option>
+              <option value="queued">Queued</option>
+            </select>
+          </div>
+        </div>
+        <div id="all-ideas" class="ideas-table">
+          <p>Loading...</p>
+        </div>
+      </div>
+
+      <!-- Queue Tab -->
+      <div id="tab-queue" class="tab-content">
+        <div class="table-header">
+          <h2>Build Queue</h2>
+          <p class="text-muted">Ideas scheduled for development</p>
+        </div>
+        <div id="build-queue" class="queue-list">
+          <p>Loading...</p>
+        </div>
+      </div>
+
+      <!-- Winners Tab -->
+      <div id="tab-winners" class="tab-content">
+        <div class="table-header">
+          <h2>Winners</h2>
+        </div>
+        <div id="winners-list" class="winners-list">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

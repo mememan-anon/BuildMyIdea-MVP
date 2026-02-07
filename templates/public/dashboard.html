@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard - BuildMyIdea</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="/" class="logo">🚀 BuildMyIdea</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/submit" class="btn btn-small">Submit New Idea</a>
+        <a href="/demos">Demos</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container dashboard-page">
+    <div class="dashboard-header">
+      <h1>My Dashboard</h1>
+      <p>Track your submitted ideas and their status</p>
+    </div>
+
+    <div class="dashboard-stats">
+      <div class="stat-card">
+        <div class="stat-number" id="total-submissions">0</div>
+        <div class="stat-label">Total Submissions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="pending-ideas">0</div>
+        <div class="stat-label">Under Review</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="winner-count">0</div>
+        <div class="stat-label">Selected as Winner</div>
+      </div>
+    </div>
+
+    <div class="dashboard-section">
+      <h2>My Ideas</h2>
+      <div id="ideas-list" class="ideas-list">
+        <p class="loading">Loading your ideas...</p>
+      </div>
+    </div>
+
+    <div class="dashboard-section" id="no-ideas" style="display: none;">
+      <div class="empty-state">
+        <div class="empty-icon">💡</div>
+        <h3>No Ideas Yet</h3>
+        <p>You haven't submitted any ideas yet. Start by submitting your first idea!</p>
+        <a href="/submit" class="btn btn-primary">Submit Your First Idea</a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/submit">Submit Idea</a>
+        <a href="/demos">Demos</a>
+      </div>
+      <div class="footer-copyright">
+        <p>&copy; 2026 BuildMyIdea. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>
